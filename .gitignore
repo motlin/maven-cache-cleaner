@@ -97,3 +97,5 @@ Thumbs.db
 # Ignore built ts files
 __tests__/runner/*
 lib/**/*
+# Ignore compiled Vite+ config (source of truth is vite.config.ts)
+vite.config.js
