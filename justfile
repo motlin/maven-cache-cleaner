@@ -11,13 +11,13 @@ _ci := if ci != "" { ":ci" } else { "" }
 install:
     {{ if ci != "" { "npm ci" } else { "npm install --legacy-peer-deps" } }}
 
-# Run ESLint
-eslint: install
-    npm run lint
+# Run Oxlint
+oxlint: install
+    npm run oxlint:ci
 
-# Run Prettier formatter
-prettier: install
-    npm run format-check
+# Check formatting with Oxfmt
+fmt: install
+    npm run fmt:ci
 
 # Type-check the project
 typecheck: install
@@ -28,7 +28,7 @@ package: install
     npm run package
 
 # Run all pre-commit checks
-precommit: eslint prettier typecheck package
+precommit: oxlint fmt typecheck package
     @echo "All pre-commit checks passed!"
 
 # Tag `vX.Y.Z` at HEAD, advance the major `vX` tag, push to upstream, and cut a GitHub release: `just release 2.1.0`

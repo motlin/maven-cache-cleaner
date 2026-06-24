@@ -1,5 +1,5 @@
-name: 'Maven dependency cleaner'
-description: 'Cleans unused maven dependencies'
+name: "Maven dependency cleaner"
+description: "Cleans unused maven dependencies"
 inputs:
   m2-path:
     description: "M2 Path"
@@ -7,7 +7,7 @@ inputs:
     default: "~/.m2/repository"
 
 runs:
-  using: 'node20'
-  main: 'dist/main/index.js'
-  post: 'dist/post/index.js'
+  using: "node20"
+  main: "dist/main/index.js"
+  post: "dist/post/index.js"
   post-if: "success()"
