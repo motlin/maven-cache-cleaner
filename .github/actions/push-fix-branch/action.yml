@@ -1,0 +1,39 @@
+name: Push fix branch
+description: Commit any working-tree changes to a fix branch and fail, or pass when the tree is clean.
+
+inputs:
+  suffix:
+    description: Suffix for the fix branch name (fix-<pr-number>-<suffix>).
+    required: true
+  message:
+    description: Commit message for the fixes.
+    required: true
+  paths:
+    description: Pathspec to stage and inspect for changes.
+    default: "."
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        FIX_BRANCH: fix-${{ github.event.pull_request.number }}-${{ inputs.suffix }}
+        MESSAGE: ${{ inputs.message }}
+        PATHS: ${{ inputs.paths }}
+      run: |
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "github-actions@github.com"
+
+        if [[ -z $(git status --porcelain -- "$PATHS") ]]; then
+          echo "No fixes needed."
+          exit 0
+        fi
+
+        git diff -- "$PATHS"
+        git switch --create "$FIX_BRANCH"
+        git add -- "$PATHS"
+        git commit --message "$MESSAGE"
+        git push --force origin "$FIX_BRANCH"
+
+        echo "Fixes have been pushed to the $FIX_BRANCH branch."
+        exit 1

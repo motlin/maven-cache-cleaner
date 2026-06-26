@@ -1,0 +1,171 @@
+# Jobs that run on pull_request, but not on merge_group. This is useful for jobs that post comments on Pull Requests or push fix branches.
+
+on:
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Check if the new commits in a Pull Request contain a merge commit. If so, fail and print them out.
+  forbid-merge-commits:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: motlin/forbid-merge-commits-action@main
+
+  automerge-dependabot:
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Enable auto-merge for Dependabot PR
+        run: gh pr merge --rebase --auto "${{ github.event.pull_request.number }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  check-fix:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: ./.github/actions/setup
+
+      - name: Run just oxlint and just fmt
+        run: |
+          just oxlint
+          just fmt
+
+      - uses: ./.github/actions/push-fix-branch
+        with:
+          suffix: check
+          message: Apply check fixes.
+
+  pre-commit-fix:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: ./.github/actions/setup
+
+      - run: just install
+
+      - name: Run pre-commit
+        run: pre-commit run --all-files || true
+
+      - uses: ./.github/actions/push-fix-branch
+        with:
+          suffix: pre-commit
+          message: Apply pre-commit fixes.
+
+  # `dist/main/index.js` and `dist/post/index.js` are the files Actions actually runs when this
+  # action is referenced with `uses:`. They are generated from `src/` by `npm run package`, so we
+  # verify the committed `dist/` matches source and push a fix branch when it drifts.
+  dist-fix:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: ./.github/actions/setup
+
+      - name: Rebuild dist/
+        run: just package
+
+      - uses: ./.github/actions/push-fix-branch
+        with:
+          suffix: dist
+          message: "Auto-fix: Rebuild dist/ directory."
+          paths: dist/
+
+  # Integration test: run the action itself against a populated Maven cache and verify it prunes
+  # the expected entries while preserving recently-accessed ones.
+  integration-setup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/cache@v5
+        with:
+          path: ~/.m2/repository
+          key: test-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Create some files in the cache
+        run: |
+          mkdir -p "$HOME/.m2/repository/com/twosigma/foo"
+          touch "$HOME/.m2/repository/com/twosigma/foo/foo.pom"
+          mkdir -p "$HOME/.m2/repository/com/twosigma/bar"
+          touch "$HOME/.m2/repository/com/twosigma/bar/bar.pom"
+          printf 'keep-me\n' > "$HOME/.m2/repository/.atime-test-file"
+      - uses: ./
+      - name: Access the foo file to update its atime
+        run: |
+          cat "$HOME/.m2/repository/com/twosigma/foo/foo.pom"
+
+  integration-validation:
+    runs-on: ubuntu-latest
+    needs: [integration-setup]
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/cache@v5
+        with:
+          path: ~/.m2/repository
+          key: test-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: Validate that the cache has the correct contents
+        run: |
+          # Check that foo.pom still exists
+          if [ -f "$HOME/.m2/repository/com/twosigma/foo/foo.pom" ]; then
+            echo "foo.pom exists after post step"
+          else
+            echo "foo.pom is missing after post step"
+            exit 1
+          fi
+
+          # Check that bar directory does not exist after post step
+          if [ ! -d "$HOME/.m2/repository/com/twosigma/bar" ]; then
+            echo "bar directory is removed after post step"
+          else
+            echo "bar directory still exists after post step"
+            exit 1
+          fi
+
+          # Check that an existing file with the old probe name survives
+          if [ "$(cat "$HOME/.m2/repository/.atime-test-file")" = "keep-me" ]; then
+            echo ".atime-test-file survives after post step"
+          else
+            echo ".atime-test-file is missing or modified after post step"
+            exit 1
+          fi
+
+  all-pr-checks:
+    name: All PR checks
+    if: ${{ !cancelled() }}
+    needs: [forbid-merge-commits, check-fix, pre-commit-fix, dist-fix, integration-validation]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: re-actors/alls-green@release/v1
+        with:
+          jobs: ${{ toJSON(needs) }}
