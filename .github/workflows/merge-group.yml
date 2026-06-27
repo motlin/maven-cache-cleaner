@@ -22,8 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/setup
-      - run: just oxlint
-      - run: just fmt
+      - run: just check
 
   build:
     runs-on: ubuntu-latest

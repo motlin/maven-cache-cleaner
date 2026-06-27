@@ -4,31 +4,43 @@ default:
     @just --list --unsorted
 
 ci := env("CI", "")
-_ci := if ci != "" { ":ci" } else { "" }
 
-# `npm install` or `npm ci`
+# Install dependencies
 [group('setup')]
 install:
-    {{ if ci != "" { "npm ci" } else { "npm install --legacy-peer-deps" } }}
+    vp install
+    vp fmt AGENTS.md
 
-# Run Oxlint
-oxlint: install
-    npm run oxlint:ci
+# Run linter
+lint: install
+    vp lint {{ if ci != "" { "--format github" } else { "--fix" } }}
 
-# Check formatting with Oxfmt
-fmt: install
-    npm run fmt:ci
+# Run formatter
+format: install
+    vp fmt {{ if ci != "" { "--check" } else { "" } }}
+
+# Run checks (format + lint + typecheck)
+check: install
+    vp check {{ if ci != "" { "" } else { "--fix" } }}
 
 # Type-check the project
 typecheck: install
-    npm run build
+    vp run typecheck
 
-# Package the action
+# Build the project
+build: install
+    vp run build
+
+# Package the action with ncc
 package: install
     npm run package
 
+# Run pre-commit hooks on all files (same as CI's pre-commit job)
+pre-commit: install
+    pre-commit run --all-files
+
 # Run all pre-commit checks
-precommit: oxlint fmt typecheck package
+precommit: check build package pre-commit
     @echo "All pre-commit checks passed!"
 
 # Tag `vX.Y.Z` at HEAD, advance the major `vX` tag, push to upstream, and cut a GitHub release: `just release 2.1.0`

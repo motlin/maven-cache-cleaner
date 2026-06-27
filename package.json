@@ -17,15 +17,10 @@
   "main": "lib/main.js",
   "scripts": {
     "build": "tsc",
-    "oxlint": "vp lint . --fix",
-    "oxlint:ci": "vp lint . --format github",
-    "fmt": "vp fmt",
-    "fmt:ci": "vp fmt --check",
     "typecheck": "tsc --noEmit",
     "package:main": "ncc build src/main.ts -o dist/main --source-map --license licenses.txt",
     "package:post": "ncc build src/post.ts -o dist/post --source-map --license licenses.txt",
     "package": "npm run package:main && npm run package:post",
-    "all": "npm run build && npm run fmt:ci && npm run oxlint:ci && npm run package",
     "prepare": "vp config"
   },
   "dependencies": {
@@ -34,6 +29,7 @@
   "devDependencies": {
     "@types/node": "^18.11.0",
     "@vercel/ncc": "^0.36.1",
+    "fallow": "^2.102.0",
     "typescript": "^5.9.3",
     "vite-plus": "latest"
   },

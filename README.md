@@ -28,13 +28,13 @@ Any files not accessed within the `~/.m2` directory after the `twosigma/maven-ca
 ### Setup
 
 ```console
-$ npm install
+just install
 ```
 
-Do a full build/lint/package run:
+Run all the pre-commit checks (format, lint, typecheck, build, package, and pre-commit hooks):
 
 ```console
-$ npm run all
+just precommit
 ```
 
 Make sure to run the above before committing changes, or the GitHub action will fail.
