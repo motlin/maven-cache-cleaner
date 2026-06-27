@@ -25653,7 +25653,7 @@ function shouldCleanup(directory) {
         }
     });
 }
-run();
+void run();
 
 
 /***/ }),

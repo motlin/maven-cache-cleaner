@@ -50,4 +50,4 @@ async function shouldCleanup(directory: string): Promise<boolean> {
   }
 }
 
-run();
+void run();

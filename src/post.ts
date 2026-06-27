@@ -54,4 +54,4 @@ function findPomFiles(dir: string, duration: number): string[] {
   return filesToRemove;
 }
 
-cleanup();
+void cleanup();

@@ -25653,7 +25653,7 @@ function findPomFiles(dir, duration) {
     search(dir);
     return filesToRemove;
 }
-cleanup();
+void cleanup();
 
 
 /***/ }),
