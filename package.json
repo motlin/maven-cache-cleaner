@@ -21,7 +21,7 @@
     "package:main": "ncc build src/main.ts -o dist/main --source-map --license licenses.txt",
     "package:post": "ncc build src/post.ts -o dist/post --source-map --license licenses.txt",
     "package": "npm run package:main && npm run package:post",
-    "prepare": "vp config"
+    "prepare": "VITE_GIT_HOOKS=0 vp config"
   },
   "dependencies": {
     "@actions/core": "^1.10.1"
