@@ -43,13 +43,14 @@ pre-commit: install
 precommit: check build package pre-commit
     @echo "All pre-commit checks passed!"
 
-# Tag `vX.Y.Z` at HEAD, advance the major `vX` tag, push to upstream, and cut a GitHub release: `just release 2.1.0`
+# Tag `vX.Y.Z` at HEAD, advance the major `vX` tag, push to upstream, and cut a GitHub release: `just release --version 2.1.0`
+[arg("version", long="version", help="Release version")]
 [group('release')]
 release version: precommit
     #!/usr/bin/env bash
     set -euo pipefail
     ver="{{ version }}"
-    [[ "$ver" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "version must be X.Y.Z, e.g. just release 2.1.0" >&2; exit 1; }
+    [[ "$ver" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "version must be X.Y.Z, e.g. just release --version 2.1.0" >&2; exit 1; }
     tag="v$ver"
     major="${tag%%.*}"
     git diff --quiet && git diff --cached --quiet || { echo "working tree is dirty; commit or stash first" >&2; exit 1; }
