@@ -2,10 +2,13 @@ import * as core from "@actions/core";
 import * as fs from "fs";
 import * as path from "path";
 
-async function cleanup(): Promise<void> {
-  try {
+async function cleanup(): Promise<void>
+{
+  try
+  {
     const shouldCleanup = core.getState("shouldCleanup") === "true";
-    if (!shouldCleanup) {
+    if (!shouldCleanup)
+    {
       core.warning("Not cleaning up m2 files. See main step logs for more information.");
       return;
     }
@@ -16,34 +19,55 @@ async function cleanup(): Promise<void> {
     // Get all .pom files recursively
     const filesToRemove = findPomFiles(resolvedM2Path, duration);
     // Remove the parent directories of the found .pom files
-    for (const file of filesToRemove) {
+    for (const file of filesToRemove)
+    {
       const parentDir = path.dirname(file);
-      if (fs.existsSync(parentDir)) {
+      if (fs.existsSync(parentDir))
+      {
         core.info(`Removing ${parentDir}`);
-        fs.rmSync(parentDir, { recursive: true });
+        fs.rmSync(
+          parentDir,
+          {
+            recursive: true,
+          },
+        );
       }
     }
-  } catch (error) {
+  }
+  catch (error)
+  {
     core.error((error as Error).message);
   }
 }
 
-function findPomFiles(dir: string, duration: number): string[] {
+function findPomFiles(dir: string, duration: number): string[]
+{
   const filesToRemove: string[] = [];
 
-  function search(directory: string): void {
-    const files = fs.readdirSync(directory, { withFileTypes: true });
+  function search(directory: string): void
+  {
+    const files = fs.readdirSync(
+      directory,
+      {
+        withFileTypes: true,
+      },
+    );
 
-    for (const file of files) {
+    for (const file of files)
+    {
       const fullPath = path.join(directory, file.name);
 
-      if (file.isDirectory()) {
+      if (file.isDirectory())
+      {
         search(fullPath);
-      } else if (file.isFile() && file.name.endsWith(".pom")) {
+      }
+      else if (file.isFile() && file.name.endsWith(".pom"))
+      {
         const stats = fs.statSync(fullPath);
         const lastAccessedMinutesAgo = (Date.now() - stats.atimeMs) / 60000;
 
-        if (lastAccessedMinutesAgo > duration) {
+        if (lastAccessedMinutesAgo > duration)
+        {
           filesToRemove.push(fullPath);
         }
       }
