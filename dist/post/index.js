@@ -25623,7 +25623,9 @@ function cleanup() {
                 const parentDir = path.dirname(file);
                 if (fs.existsSync(parentDir)) {
                     core.info(`Removing ${parentDir}`);
-                    fs.rmSync(parentDir, { recursive: true });
+                    fs.rmSync(parentDir, {
+                        recursive: true,
+                    });
                 }
             }
         }
@@ -25635,7 +25637,9 @@ function cleanup() {
 function findPomFiles(dir, duration) {
     const filesToRemove = [];
     function search(directory) {
-        const files = fs.readdirSync(directory, { withFileTypes: true });
+        const files = fs.readdirSync(directory, {
+            withFileTypes: true,
+        });
         for (const file of files) {
             const fullPath = path.join(directory, file.name);
             if (file.isDirectory()) {
