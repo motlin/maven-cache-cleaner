@@ -9,7 +9,7 @@ ci := env("CI", "")
 [group('setup')]
 install:
     vp install
-    vp fmt AGENTS.md
+    oxfmt-next-line AGENTS.md
 
 # Run linter
 lint: install
@@ -18,11 +18,11 @@ lint: install
 # Run formatter
 format: install
     pre-commit run just-fmt --all-files
-    vp fmt {{ if ci != "" { "--check" } else { "" } }}
+    oxfmt-next-line {{ if ci != "" { "--check" } else { "" } }}
 
-# Run checks (format + lint + typecheck)
+# Run checks (lint + typecheck; formatting is `just format`)
 check: install
-    vp check {{ if ci != "" { "" } else { "--fix" } }}
+    vp check --no-fmt {{ if ci != "" { "" } else { "--fix" } }}
 
 # Type-check the project
 typecheck: install

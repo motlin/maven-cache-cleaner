@@ -2,10 +2,8 @@ import { defineConfig } from "vite-plus";
 
 export default defineConfig({
   staged: {
-    "*": "vp check --fix",
-  },
-  fmt: {
-    ignorePatterns: ["dist/**", "lib/**"],
+    // Formatting runs through oxfmt-next-line (configured in .oxfmtrc.json), not Vite+'s bundled oxfmt.
+    "*": "vp check --fix --no-fmt",
   },
   lint: {
     plugins: ["oxc", "typescript", "unicorn", "react"],

@@ -1,0 +1,4 @@
+{
+  "braceStyle": "next-line",
+  "ignorePatterns": ["dist/**", "lib/**"]
+}
