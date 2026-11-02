@@ -1,8 +1,10 @@
 import * as core from "@actions/core";
 import * as fs from "fs";
 import * as path from "path";
-async function run(): Promise<void> {
-  try {
+async function run(): Promise<void>
+{
+  try
+  {
     const m2Path = core.getInput("m2-path");
 
     // Resolve the m2 path using HOME environment variable
@@ -15,20 +17,25 @@ async function run(): Promise<void> {
     // Save start time
     const startTime = Date.now();
     core.saveState("startTime", startTime);
-  } catch (error) {
+  }
+  catch (error)
+  {
     if (error instanceof Error) core.setFailed(error.message);
   }
 }
 
-async function shouldCleanup(directory: string): Promise<boolean> {
-  if (!fs.existsSync(directory)) {
+async function shouldCleanup(directory: string): Promise<boolean>
+{
+  if (!fs.existsSync(directory))
+  {
     core.warning("No detected loaded maven local repository. Will skip cleanup.");
     return false;
   }
   const testDirectoryPath = fs.mkdtempSync(path.join(directory, ".atime-test-"));
   const testFilePath = path.join(testDirectoryPath, "probe");
 
-  try {
+  try
+  {
     fs.writeFileSync(testFilePath, "test");
 
     // sleep for 50 ms
@@ -39,14 +46,25 @@ async function shouldCleanup(directory: string): Promise<boolean> {
 
     // Get the stats of the file
     const stats = fs.statSync(testFilePath);
-    if (stats.atimeMs !== stats.mtimeMs) {
+    if (stats.atimeMs !== stats.mtimeMs)
+    {
       return true;
-    } else {
+    }
+    else
+    {
       core.warning("The filesystem does not support atime. No cleanup will be performed.");
       return false;
     }
-  } finally {
-    fs.rmSync(testDirectoryPath, { recursive: true, force: true });
+  }
+  finally
+  {
+    fs.rmSync(
+      testDirectoryPath,
+      {
+        recursive: true,
+        force: true,
+      },
+    );
   }
 }
 

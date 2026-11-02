@@ -25649,7 +25649,10 @@ function shouldCleanup(directory) {
             }
         }
         finally {
-            fs.rmSync(testDirectoryPath, { recursive: true, force: true });
+            fs.rmSync(testDirectoryPath, {
+                recursive: true,
+                force: true,
+            });
         }
     });
 }
